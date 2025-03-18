@@ -60,6 +60,9 @@ class CreateShortURL(APIView):
 class GetURLStats(APIView):
     """Get statistics for a short URL"""
     def get(self, request, short_code):
-        url_entry = get_object_or_404(ShortenedURL, short_code=short_code)
-        serializer = ShortenedURLSerializer(url_entry)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        try:
+            url_entry = ShortenedURL.objects.get(short_code=short_code)
+            serializer = ShortenedURLSerializer(url_entry)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except ShortenedURL.DoesNotExist:
+            return Response({"error": "Short URL not found."}, status=status.HTTP_404_NOT_FOUND)
