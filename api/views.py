@@ -16,7 +16,10 @@ class ShortURLView(APIView):
 
         # Return full details in JSON
         serializer = ShortenedURLSerializer(url_entry)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        if serializer.is_valid():
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
     def put(self, request, short_code):
         """Update an existing short URL"""
