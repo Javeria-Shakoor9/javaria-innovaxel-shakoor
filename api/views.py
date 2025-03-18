@@ -25,20 +25,28 @@ class ShortURLView(APIView):
 
     def put(self, request, short_code):
         """Update an existing short URL"""
-        url_entry = get_object_or_404(ShortenedURL, short_code=short_code)
+        try:
+            url_entry = ShortenedURL.objects.get(short_code=short_code)
+        except ShortenedURL.DoesNotExist:
+            return Response({"error": "Short URL not found."}, status=status.HTTP_404_NOT_FOUND)
+        
         serializer = ShortenedURLSerializer(url_entry, data=request.data, partial=True)
         
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
         
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"error": "Invalid data", "details": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
 
     def delete(self, request, short_code):
         """Delete an existing short URL"""
-        url_entry = get_object_or_404(ShortenedURL, short_code=short_code)
-        url_entry.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        try:
+            url_entry = ShortenedURL.objects.get(short_code=short_code)
+            url_entry.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except ShortenedURL.DoesNotExist:
+            return Response({"error": "Short URL not found."}, status=status.HTTP_404_NOT_FOUND)
 
 class CreateShortURL(APIView):
     """Create a new short URL"""
