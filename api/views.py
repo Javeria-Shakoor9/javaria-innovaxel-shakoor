@@ -10,15 +10,17 @@ class ShortURLView(APIView):
 
     def get(self, request, short_code):
         """Retrieve the original URL (without redirect)"""
-        url_entry = get_object_or_404(ShortenedURL, short_code=short_code)
-        url_entry.access_count += 1  # Increase access count
-        url_entry.save()
-
-        # Return full details in JSON
-        serializer = ShortenedURLSerializer(url_entry)
-        if serializer.is_valid():
+        try:
+            url_entry = ShortenedURL.objects.get(short_code=short_code)
+            url_entry.access_count += 1  # Increase access count
+            url_entry.save()
+            
+            # Serialize and return full details in JSON format
+            serializer = ShortenedURLSerializer(url_entry)
             return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+        except ShortenedURL.DoesNotExist:
+            return Response({"error": "Short URL not found."}, status=status.HTTP_404_NOT_FOUND)
 
 
     def put(self, request, short_code):
